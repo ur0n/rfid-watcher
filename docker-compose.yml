@@ -14,7 +14,7 @@ services:
     environment:
       - REDIS_HOST=redis # default localhost
       - REDIS_PORT=6379  # default 6379
-      - "SCHEDULE=00 * * * *"
+      - SCHEDULE=00 * * * *
     links:
       - "redis"
     command: "gradle run"
@@ -26,7 +26,7 @@ services:
       - ./outputs:/home/gradle/project/outputs
     command: "gradle run"
     environment:
-      - "SCHEDULE=00 00 * * *"
+      - SCHEDULE=00 00 * * *
 
   fluentd:
     image: aiph.work:5000/mpuarch/fluentd
