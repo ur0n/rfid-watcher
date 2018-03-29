@@ -1,0 +1,96 @@
+version: "3"
+services:
+  gradle:
+    image: aiph.work:5000/mpuarch/gradle
+    working_dir: /home/gradle/project
+    command: gradle run
+    links:
+      - "fluentd"
+    networks:
+      - "my-net"
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+
+  batch:
+    image: aiph.work:5000/mpuarch/batch
+    volumes:
+      # - ./batch:/home/gradle/project/src/main/java/resources
+      - files:/home/gradle/project/files
+    environment:
+        - PATTERN=tag.*  # default tag.report[current time string that format is yyyyMMddHHmmssSSS]
+        - REDIS_HOST=redis # default localhost
+        - REDIS_PORT=6379  # default 6379
+    links:
+      - "redis"
+    networks:
+      - "my-net"
+    command: "gradle run"
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+
+  concat:
+    image: aiph.work:5000/mpuarch/concat
+    volumes:
+      - files:/home/gradle/project/files
+      - outputs:/home/gradle/project/outputs
+    networks:
+      - "my-net"
+    command: "gradle run"
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+
+  fluentd:
+    image: aiph.work:5000/mpuarch/fluentd
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    links:
+      - "redis"
+    networks:
+      - "my-net"
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+    networks:
+      - my-net
+
+networks:
+  my-net:
+    driver: "overlay"
+
+volumes:
+  files:
+    driver: "overlay"
+    driver_opts:
+      type: none
+      device: /home/docker/files
+      o: bind
+  outputs:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/docker/outputs
+      o: bind
