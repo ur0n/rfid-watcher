@@ -2,20 +2,120 @@ group 'com.kron'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
-apply plugin: 'application'
-
-mainClassName = 'com.kron.fluentdsample.RFIDWatcher'
+apply plugin: 'com.google.protobuf'
 
 sourceCompatibility = 1.8
 
+// build には protobuf-gradle-pluginが必要
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.3'
+    }
+}
+
+// projectの依存するライブラリの参照先
 repositories {
     mavenCentral()
 }
 
+def grpcVersion = '1.8.0'
+def epollVersion = '4.1.11'
+def epollSuffix = 'Final'
+def os = "osx-x86_64"
+
+// projectの依存ライブラリ
 dependencies {
     compile fileTree(dir: './lib', includes: ['*.jar'])
     compile group: 'org.fluentd', name: 'fluent-logger', version: '0.2.11'
     compile group: 'org.yaml', name: 'snakeyaml', version: '1.20'
     testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    compile 'com.google.protobuf:protobuf-java:3.5.1'
+    compile "io.grpc:grpc-netty:${grpcVersion}"
+    compile "io.grpc:grpc-stub:${grpcVersion}"
+    compile "io.grpc:grpc-protobuf:${grpcVersion}"
 }
 
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.5.1-1'
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs 'build/generated/source/proto/main/grpc'
+            srcDirs 'build/generated/source/proto/main/java'
+        }
+    }
+}
+
+apply plugin: 'application'
+
+mainClassName = 'com.kron.fluentdsample.Main'
+
+run {
+    if (project.hasProperty('args')) {
+        args project.args.split('\\s+')
+        def strategy = project.args
+        if (strategy == "file") {
+            mainClassName = 'com.kron.fluentdsample.TagReportingServer'
+        } else if (strategy == "grpc") {
+            mainClassName = 'com.kron.fluentdsample.GrpcServer'
+        }
+    }
+}
+
+jar {
+    def executableBaseName = "rfid-plot-3"
+
+    archiveName = "${executableBaseName}.jar"
+    manifest {
+        attributes 'Main-Class': mainClassName
+
+    }
+    from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+task tagLoggingServer(type: CreateStartScripts) {
+    mainClassName = 'com.kron.fluentdsample.Main'
+    applicationName = 'tag-logging-server'
+    outputDir = new File(project.buildDir, 'tmp')
+    classpath = jar.outputs.files + project.configurations.runtime
+}
+
+task tagReportingServer(type: CreateStartScripts) {
+    mainClassName = 'com.kron.fluentdsample.TagReportingServer'
+    applicationName = 'tag-reporting-server'
+    outputDir = new File(project.buildDir, 'tmp')
+    classpath = jar.outputs.files + project.configurations.runtime
+}
+
+task grpcServer(type: CreateStartScripts) {
+    mainClassName = 'com.kron.fluentdsample.GrpcServer'
+    applicationName = 'grpc-server'
+    outputDir = new File(project.buildDir, 'tmp')
+    classpath = jar.outputs.files + project.configurations.runtime
+}
+
+applicationDistribution.into('bin') {
+    from(tagLoggingServer)
+    from(tagReportingServer)
+    from(grpcServer)
+
+    fileMode = 0755
+}

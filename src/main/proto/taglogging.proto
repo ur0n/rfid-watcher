@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.kron.fluentsample";
+option java_outer_classname = "TagLoggingProto";
+
+package taglogging;
+
+
+service TagLoggingService {
+    rpc AntennaHealthCheck (NoParams) returns (stream AntennaChange) {}
+    rpc TagStream (ReaderIDRequest) returns (stream TagReport) {}
+    rpc ServerList (NoParams) returns (ServerListResponse) {}
+}
+
+message ReaderIDRequest {
+    string id = 1;
+}
+
+message NoParams {
+
+}
+
+message AntennaChange {
+    string ip = 1;
+    int32 port = 2;
+    int32 status = 3;
+}
+
+message TagReport {
+    int32 port = 1;
+    string id = 2;
+    double rssi = 3;
+    int64 time = 4;
+    double phase = 5;
+}
+
+message ServerListResponse {
+    repeated string serverList = 1;
+}

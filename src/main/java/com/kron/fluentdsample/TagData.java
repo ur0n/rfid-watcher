@@ -1,6 +1,8 @@
 package com.kron.fluentdsample;
 
-import java.lang.reflect.Field;
+
+import com.kron.fluentsample.TagReport;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,6 +13,14 @@ public class TagData {
     private double rssi;
     private long time;
     private double phase;
+
+    public TagData(int port, String id, double rssi, long time, double phase) {
+        this.port = port;
+        this.id = id;
+        this.rssi = rssi;
+        this.time = time;
+        this.phase = phase;
+    }
 
     public TagData(String ip, int port, String id, double rssi, long time, double phase) {
         this.ip = ip;
@@ -43,6 +53,17 @@ public class TagData {
 
     public double getPhase() {
         return phase;
+    }
+
+
+    public TagReport toTagReport() {
+        return TagReport.newBuilder()
+                .setPort(port)
+                .setId(id)
+                .setRssi(rssi)
+                .setTime(time)
+                .setPhase(phase)
+                .build();
     }
 
     public Map<String, Object> toMap() {
