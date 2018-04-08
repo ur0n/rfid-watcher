@@ -1,4 +1,4 @@
-package com.kron.fluentdsample.observer.monitor;
+package com.kron.fluentdsample.server;
 
 import io.grpc.Attributes;
 

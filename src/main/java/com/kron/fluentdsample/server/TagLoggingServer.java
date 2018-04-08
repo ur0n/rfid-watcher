@@ -1,13 +1,11 @@
-package com.kron.fluentdsample.observer.monitor;
+package com.kron.fluentdsample.server;
 
 import com.kron.fluentsample.*;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.stub.ServerCalls;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -76,17 +74,12 @@ public class TagLoggingServer {
         }
 
         @Override
-        public void tagStream(ReaderIDRequest request, StreamObserver<TagReport> responseObserver) {
-            tagStreamCallback.call(request.getId(), responseObserver);
-        }
-
-        @Override
         public void antennaHealthCheck(NoParams request, StreamObserver<AntennaChange> responseObserver) {
             antennaHealthCheckCallback.call(request, responseObserver);
         }
 
         @Override
-        public StreamObserver<ReaderIDRequest> tagStream2(StreamObserver<TagReport> responseObserver) {
+        public StreamObserver<ReaderIDRequest> tagStream(StreamObserver<TagReport> responseObserver) {
             Map<String, ReaderIDRequest> requestMap = new HashMap<>();
 
             return new StreamObserver<ReaderIDRequest>() {

@@ -1,4 +1,4 @@
-package com.kron.fluentdsample.observer.monitor;
+package com.kron.fluentdsample.server;
 
 import com.kron.fluentsample.TagReport;
 import io.grpc.stub.StreamObserver;

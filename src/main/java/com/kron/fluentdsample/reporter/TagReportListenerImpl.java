@@ -1,11 +1,10 @@
-package com.kron.fluentdsample;
+package com.kron.fluentdsample.reporter;
 
 import com.impinj.octane.ImpinjReader;
 import com.impinj.octane.Tag;
 import com.impinj.octane.TagReport;
 import com.impinj.octane.TagReportListener;
-import com.kron.fluentdsample.observer.Observer;
-import com.kron.fluentdsample.reporter.Reporter;
+import com.kron.fluentdsample.entity.TagData;
 
 import java.util.List;
 

@@ -1,15 +1,14 @@
 package com.kron.fluentdsample;
 
-import com.kron.fluentdsample.observer.monitor.IAntennaHealthCheckCallback;
-import com.kron.fluentdsample.observer.monitor.ITagStreamCallback;
-import com.kron.fluentdsample.observer.monitor.ITransPortFilterCallback;
-import com.kron.fluentdsample.observer.monitor.TagLoggingServer;
+import com.kron.fluentdsample.server.IAntennaHealthCheckCallback;
+import com.kron.fluentdsample.server.ITagStreamCallback;
+import com.kron.fluentdsample.server.ITransPortFilterCallback;
+import com.kron.fluentdsample.server.TagLoggingServer;
 import com.kron.fluentsample.AntennaChange;
 import com.kron.fluentsample.NoParams;
 import com.kron.fluentsample.TagReport;
 import io.grpc.Attributes;
 import io.grpc.stub.StreamObserver;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.io.IOException;
 import java.util.HashMap;

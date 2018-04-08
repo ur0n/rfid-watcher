@@ -1,6 +1,6 @@
 package com.kron.fluentdsample.reporter;
 
-import com.kron.fluentdsample.TagData;
+import com.kron.fluentdsample.entity.TagData;
 import com.kron.fluentdsample.TagReportingServer;
 
 import java.io.IOException;
@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Random;
 
 public class TagDataReporterFromFile extends Reporter<TagData> {
     private TagData tagData;
@@ -25,11 +26,13 @@ public class TagDataReporterFromFile extends Reporter<TagData> {
 
         try {
             Path path = Paths.get(url.toURI());
+            Random rand = new Random();
             Files.lines(path, StandardCharsets.UTF_8).forEach((String line) -> {
                 String[] splited = line.split(",");
-                int port = Integer.parseInt(splited[0]);
+//                int port = Integer.parseInt(splited[0]);
+                int port = rand.nextInt(4) + 1;
                 String id = String.join("", splited[1].split(" "));
-                String ip = "0.0.0.0.0";
+                String ip = "0.0.0.0." + rand.nextInt(4);
                 double rssi = Double.parseDouble(splited[2]);
                 long time = Long.valueOf(splited[4]);
                 double phase = Double.parseDouble(splited[3]);

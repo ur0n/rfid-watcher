@@ -1,6 +1,6 @@
-package com.kron.fluentdsample.observer.monitor;
+package com.kron.fluentdsample;
 
-import io.grpc.Server;
+import com.kron.fluentdsample.server.TagLoggingServer;
 
 import java.io.IOException;
 

@@ -1,6 +1,6 @@
 package com.kron.fluentdsample.observer.monitor;
 
-import com.kron.fluentdsample.*;
+import com.kron.fluentdsample.entity.TagData;
 import com.kron.fluentdsample.observer.Observer;
 import com.kron.fluentdsample.reporter.Reporter;
 

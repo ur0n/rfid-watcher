@@ -1,4 +1,4 @@
-package com.kron.fluentdsample;
+package com.kron.fluentdsample.entity;
 
 
 import com.kron.fluentsample.TagReport;

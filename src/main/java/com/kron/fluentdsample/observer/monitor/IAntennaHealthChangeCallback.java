@@ -1,4 +1,7 @@
 package com.kron.fluentdsample.observer.monitor;
 
-public class IAntennaHealthChangeCallback {
+import com.kron.fluentdsample.entity.AntennaHealth;
+
+public interface IAntennaHealthChangeCallback {
+    void call(AntennaHealth AntennaHealth);
 }
