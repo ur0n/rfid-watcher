@@ -13,7 +13,7 @@ public class TagReportListenerImpl extends Reporter<TagData> implements TagRepor
 
     @Override
     public TagData getValue() {
-        return null;
+        return tagData;
     }
 
     @Override

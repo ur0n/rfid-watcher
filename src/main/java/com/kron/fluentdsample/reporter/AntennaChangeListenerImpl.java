@@ -21,6 +21,9 @@ public class AntennaChangeListenerImpl extends Reporter<AntennaHealth> implement
     @Override
     public void onAntennaChanged(ImpinjReader impinjReader, AntennaEvent antennaEvent) {
         antennaHealth = new AntennaHealth(impinjReader.getAddress(), antennaEvent.getPortNumber(), antennaEvent.getState().getValue());
+        System.out.println("=============== Antenna Change ===================");
+        System.out.println(antennaHealth);
+        System.out.println("==================================================");
         notifyObservers();
     }
 }

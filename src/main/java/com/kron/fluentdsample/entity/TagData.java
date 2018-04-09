@@ -80,7 +80,9 @@ public class TagData {
     @Override
     public String toString() {
         return "TagData{" +
-                "id=" + id +
+                "ip='" + ip + '\'' +
+                ", port=" + port +
+                ", id='" + id + '\'' +
                 ", rssi=" + rssi +
                 ", time=" + time +
                 ", phase=" + phase +

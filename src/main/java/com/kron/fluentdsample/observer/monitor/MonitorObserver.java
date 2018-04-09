@@ -22,7 +22,6 @@ public class MonitorObserver implements Observer<TagData> {
     private static class NoOperationHandler implements ICallback {
         @Override
         public void call(TagData tagData) {
-            System.out.println("----------------------");
         }
     }
 

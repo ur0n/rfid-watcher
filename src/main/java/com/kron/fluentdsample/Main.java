@@ -50,21 +50,22 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
         id: 192.168.0.102:1
         ip:portのようになっている
     */
+    // TODO 他のidがきたら前回のオブサーバーをリセットする
+    // そもそもオブサーバーを分ける意味はあるのか
+    // antennaIDに向かって通知していく機構があればいい
     @Override
     public void call(String id, StreamObserver<TagReport> response) {
-        if (responseMap.containsKey(id)) {
-            response.onCompleted();
+        String ip = id.split(":")[0];
+        MonitorObserver observer = monitorObserverMap.get(id);
 
-            String ip = id.split(":")[0];
-            responseMap.get(id).onCompleted();
-            responseMap.remove(id);
+        if (responseMap.containsKey(id)) {
+            observer.resetCallback();
         } else {
             responseMap.put(id, response);
-            String ip = id.split(":")[0];
-            MonitorObserver observer = monitorObserverMap.get(id);
             observer.setCallback(this::call);
-            reporterMap.get(ip).updateObserver(observer);
         }
+
+        reporterMap.get(ip).updateObserver(observer);
     }
 
     @Override
@@ -145,10 +146,11 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
                 // tag data reporter;
                 TagReportListenerImpl tagReportListener = new TagReportListenerImpl();
 
+                // setting reader
                 RFIDReader reader = new RFIDReader(ip);
                 reader.connect();
                 reader.setting();
-                
+
                 List<AntennaConfig> antennaConfigs = reader.getAcg().getAntennaConfigs();
                 List<String> ids = antennaConfigs.stream().map(config -> ip + ":" + config.getPortNumber()).collect(Collectors.toList());
 
