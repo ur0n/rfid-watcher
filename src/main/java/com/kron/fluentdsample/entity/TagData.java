@@ -1,4 +1,4 @@
-package com.kron.fluentdsample;
+package com.kron.fluentdsample.entity;
 
 
 import com.kron.fluentsample.TagReport;
@@ -58,6 +58,7 @@ public class TagData {
 
     public TagReport toTagReport() {
         return TagReport.newBuilder()
+                .setIp(ip)
                 .setPort(port)
                 .setId(id)
                 .setRssi(rssi)
@@ -80,7 +81,9 @@ public class TagData {
     @Override
     public String toString() {
         return "TagData{" +
-                "id=" + id +
+                "ip='" + ip + '\'' +
+                ", port=" + port +
+                ", id='" + id + '\'' +
                 ", rssi=" + rssi +
                 ", time=" + time +
                 ", phase=" + phase +

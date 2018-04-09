@@ -1,4 +1,4 @@
-package com.kron.fluentdsample;
+package com.kron.fluentdsample.entity;
 
 import com.kron.fluentsample.AntennaChange;
 
@@ -15,12 +15,24 @@ public class AntennaHealth {
         this.status = status;
     }
 
-
     public AntennaChange toAntennaChange() {
         return AntennaChange.newBuilder()
                 .setIp(ip)
                 .setPort(port)
                 .setStatus(status).build();
+    }
+
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public String getIp() {
+        return ip;
     }
 
     @Override

@@ -1,29 +1,46 @@
 package com.kron.fluentdsample.reporter;
 
 import com.impinj.octane.*;
-import com.kron.fluentdsample.TagData;
-
-import java.util.List;
 
 public class RFIDReader {
     private ImpinjReader reader;
     private String ip;
-    private TagDataReporter reporter;
+    private Settings settings;
+    private AntennaConfigGroup acg;
+    private TagReportListener tagReportListener;
+    private AntennaChangeListener antennaChangeListener;
 
-    RFIDReader(String ip) {
+    public RFIDReader(String ip) {
         this.ip = ip;
+        this.reader = new ImpinjReader(ip, "RFIDReade" + ip);
     }
 
-    public void connect() {
-        try {
-            reader.connect(ip);
-        } catch (OctaneSdkException e) {
-            e.printStackTrace();
-        }
+    public void connect() throws OctaneSdkException {
+        reader.connect(ip);
     }
 
-    public void settingReader() {
-        Settings settings = reader.queryDefaultSettings();
+    public void setting() {
+        settingReport();
+        settingAntenna();
+    }
+
+    public void setTagReportListener(TagReportListener tagReportListener) {
+        this.tagReportListener = tagReportListener;
+        reader.setTagReportListener(tagReportListener);
+    }
+
+    public void setAntennaChangeListener(AntennaChangeListener antennaChangeListener){
+        this.antennaChangeListener = antennaChangeListener;
+        reader.setAntennaChangeListener(antennaChangeListener);
+    }
+
+    private void settingAntenna() {
+        acg = settings.getAntennas();
+    }
+
+
+    private void settingReport() {
+        settings = reader.queryDefaultSettings();
         settings.getReport().setIncludeAntennaPortNumber(true);
         settings.getReport().setMode(ReportMode.Individual);
         settings.getReport().setIncludePeakRssi(true);
@@ -38,44 +55,12 @@ public class RFIDReader {
         }
     }
 
-    public void setListeners() {
-        reader.setTagReportListener(new TagReportListenerImpl());
+    public AntennaConfigGroup getAcg() {
+        return acg;
     }
 
-    public void start() {
-        try {
-            // Start the reader
-            reader.start();
-        } catch (OctaneSdkException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void notifyReporter(com.kron.fluentdsample.TagData tagData) {
-        reporter.update(tagData);
-    }
-
-    private class AntennaChangeListenerImpl implements AntennaChangeListener {
-        @Override
-        public void onAntennaChanged(ImpinjReader impinjReader, AntennaEvent antennaEvent) {
-
-        }
-    }
-
-    private class TagReportListenerImpl implements TagReportListener {
-        @Override
-        public void onTagReported(ImpinjReader reader, TagReport report) {
-            List<Tag> tags = report.getTags();
-            tags.forEach(tag -> {
-
-                int port = tag.getAntennaPortNumber();
-                String id = String.join("", tag.getEpc().toString().split(" "));
-                double rssi = tag.getPeakRssiInDbm();
-                long time = Long.valueOf(tag.getLastSeenTime().ToString());
-                double phase = tag.getPhaseAngleInRadians();
-                com.kron.fluentdsample.TagData tagdata = new TagData(ip, port, id, rssi, time, phase);
-                notifyReporter(tagdata);
-            });
-        }
+    public void start() throws OctaneSdkException {
+        // Start the reader
+        reader.start();
     }
 }

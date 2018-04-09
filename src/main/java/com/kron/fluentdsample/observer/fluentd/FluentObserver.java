@@ -2,7 +2,7 @@ package com.kron.fluentdsample.observer.fluentd;
 
 import com.kron.fluentdsample.observer.Observer;
 import com.kron.fluentdsample.reporter.Reporter;
-import com.kron.fluentdsample.TagData;
+import com.kron.fluentdsample.entity.TagData;
 import org.fluentd.logger.FluentLogger;
 
 import java.text.SimpleDateFormat;

@@ -1,6 +1,7 @@
 package com.kron.fluentdsample.reporter;
 
 import com.kron.fluentdsample.observer.Observer;
+import com.kron.fluentdsample.observer.monitor.MonitorObserver;
 
 import java.util.ArrayList;
 
