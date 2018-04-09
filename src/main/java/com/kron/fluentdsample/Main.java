@@ -31,10 +31,12 @@ import java.util.stream.Collectors;
 public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAntennaHealthCheckCallback, IAntennaHealthChangeCallback, ICallback {
     private List<String> ips;
     private Map<String, StreamObserver<TagReport>> responseMap;
-    private Map<String, StreamObserver<AntennaChange>> antennaChangeResponseMap;
+    private StreamObserver<TagReport> response;
+    private String id;
+    private MonitorObserver monitorObserver;
+
     private Map<String, Reporter<TagData>> reporterMap;
     private Map<String, MonitorObserver> monitorObserverMap;
-    private Map<String, RFIDReader> readerMap;
     private StreamObserver<AntennaChange> antennaChangeStreamObserver;
 
     Main() {
@@ -42,8 +44,6 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
         this.responseMap = new HashMap<>();
         this.reporterMap = new HashMap<>();
         this.monitorObserverMap = new HashMap<>();
-        this.readerMap = new HashMap<>();
-        this.antennaChangeResponseMap = new HashMap<>();
     }
 
     /*
@@ -51,21 +51,23 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
         ip:portのようになっている
     */
     // TODO 他のidがきたら前回のオブサーバーをリセットする
-    // そもそもオブサーバーを分ける意味はあるのか
-    // antennaIDに向かって通知していく機構があればいい
     @Override
     public void call(String id, StreamObserver<TagReport> response) {
         String ip = id.split(":")[0];
         MonitorObserver observer = monitorObserverMap.get(id);
 
-        if (responseMap.containsKey(id)) {
-            observer.resetCallback();
-        } else {
-            responseMap.put(id, response);
-            observer.setCallback(this::call);
+        // 前回のオブサーバーをリセットする
+        if (this.id != null && !id.equals(this.id)) {
+            String prevIp = this.id.split(":")[0];
+            monitorObserver.resetCallback();
+            reporterMap.get(prevIp).updateObserver(monitorObserver);
         }
 
+        this.id = id;
+        this.response = response;
+        observer.setCallback(this::call);
         reporterMap.get(ip).updateObserver(observer);
+        monitorObserver = observer;
     }
 
     @Override
@@ -92,16 +94,16 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
 
     @Override
     public void call(TagData tagData) {
-        String id = tagData.getIp() + ":" + tagData.getPort();
-        if (responseMap.containsKey(id)) {
-            StreamObserver<TagReport> response = responseMap.get(id);
+        if (response != null) {
             response.onNext(tagData.toTagReport());
         }
     }
 
     @Override
     public void call(AntennaHealth antennaHealth) {
-        antennaChangeStreamObserver.onNext(antennaHealth.toAntennaChange());
+        if (antennaChangeStreamObserver != null) {
+            antennaChangeStreamObserver.onNext(antennaHealth.toAntennaChange());
+        }
     }
 
     private void readYAML() {
@@ -119,25 +121,6 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
         readYAML();
 
         TagLoggingServer server = new TagLoggingServer(this::call, this::call, this::call);
-       /*
-        {
-            192.168.0.102: reporter
-            192.168.0.103: reporter
-            192.168.0.104: reporter
-        }
-
-        {
-            192.168.0.102:1: monitorObserver
-            192.168.0.102:2: monitorObserver
-            192.168.0.102:3: monitorObserver
-            192.168.0.102:4: monitorObserver
-            192.168.0.103:1: monitorObserver
-            192.168.0.104:1: monitorObserver
-            .
-            .
-            .
-        }
-         */
 
         ips.parallelStream().forEach(ip -> {
             try {

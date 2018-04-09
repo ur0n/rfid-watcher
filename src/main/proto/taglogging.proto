@@ -28,11 +28,12 @@ message AntennaChange {
 }
 
 message TagReport {
-    int32 port = 1;
-    string id = 2;
-    double rssi = 3;
-    int64 time = 4;
-    double phase = 5;
+    string ip = 1;
+    int32 port = 2;
+    string id = 3;
+    double rssi = 4;
+    int64 time = 5;
+    double phase = 6;
 }
 
 message ServerListResponse {

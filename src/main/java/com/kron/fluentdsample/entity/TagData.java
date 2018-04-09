@@ -58,6 +58,7 @@ public class TagData {
 
     public TagReport toTagReport() {
         return TagReport.newBuilder()
+                .setIp(ip)
                 .setPort(port)
                 .setId(id)
                 .setRssi(rssi)

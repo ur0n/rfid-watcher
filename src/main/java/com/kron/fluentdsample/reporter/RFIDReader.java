@@ -15,12 +15,6 @@ public class RFIDReader {
         this.reader = new ImpinjReader(ip, "RFIDReade" + ip);
     }
 
-    public RFIDReader(String ip, TagReportListener tagReportListener, AntennaChangeListener antennaChangeListener){
-        this.ip = ip;
-        this.tagReportListener = tagReportListener;
-        this.antennaChangeListener = antennaChangeListener;
-    }
-
     public void connect() throws OctaneSdkException {
         reader.connect(ip);
     }

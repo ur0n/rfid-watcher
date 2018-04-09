@@ -3,7 +3,7 @@ services:
   gradle:
     image: aiph.work:5000/mpuarch/gradle
     working_dir: /home/gradle/project
-    command: gradle run
+    command: gradle run -Pargs=file
     ports:
       - "50051:50051"
     links:
