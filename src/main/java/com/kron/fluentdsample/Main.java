@@ -92,9 +92,11 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
         });
     }
 
+    // TODO readerを分ける
     @Override
     public void call(TagData tagData) {
-        if (response != null) {
+        String id = tagData.getIp() + ":" + tagData.getPort();
+        if (response != null && this.id.equals(id)) {
             response.onNext(tagData.toTagReport());
         }
     }
