@@ -6,6 +6,7 @@ import com.kron.fluentdsample.entity.AntennaHealth;
 import com.kron.fluentdsample.entity.TagData;
 import com.kron.fluentdsample.observer.fluentd.FluentObserver;
 import com.kron.fluentdsample.observer.monitor.*;
+import com.kron.fluentdsample.observer.redis.RedisObserver;
 import com.kron.fluentdsample.reporter.AntennaChangeListenerImpl;
 import com.kron.fluentdsample.reporter.RFIDReader;
 import com.kron.fluentdsample.reporter.Reporter;
@@ -146,8 +147,11 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
                     monitorObserverMap.put(id, monitorObserver);
                     tagReportListener.addObserver(monitorObserver);
                 });
-                FluentObserver fluentObserver = new FluentObserver();
-                tagReportListener.addObserver(fluentObserver);
+
+                RedisObserver redisObserver = new RedisObserver(10000, "redis", 6379);
+//                FluentObserver fluentObserver = new FluentObserver();
+//                tagReportListener.addObserver(fluentObserver);
+                tagReportListener.addObserver(redisObserver);
                 reporterMap.put(ip, tagReportListener);
 
                 //set observers for observe antenna change

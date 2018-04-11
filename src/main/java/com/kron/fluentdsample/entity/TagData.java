@@ -78,6 +78,20 @@ public class TagData {
         return data;
     }
 
+
+    public Map<String, String> toHash() {
+        Map<String, String> data = new HashMap<>();
+        data.put("ip", this.ip);
+        data.put("port", String.valueOf(this.port));
+        data.put("id", this.id);
+        data.put("rssi", String.valueOf(this.rssi));
+        data.put("time", String.valueOf(this.time));
+        data.put("phase", String.valueOf(this.phase));
+        return data;
+    }
+
+
+
     @Override
     public String toString() {
         return "TagData{" +

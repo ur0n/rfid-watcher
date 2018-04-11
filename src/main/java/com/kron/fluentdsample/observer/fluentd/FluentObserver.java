@@ -15,12 +15,9 @@ public class FluentObserver implements Observer<TagData> {
     public void update(Reporter<TagData> reporter) {
         TagData tagData = reporter.getValue();
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-        String timeTag = format.format(new Date(tagData.getTime() / 1000));
-        logger.log(
-                "report" +
-                        timeTag +
-                        String.join("", tagData.getId().split(".")) +
-                        tagData.getPort(), tagData.toMap()
-        );
+        String timeTag = format.format(new Date());
+
+        String tag = "report" + timeTag + String.join("", tagData.getId().split(".")) + tagData.getPort();
+        logger.log(tag, tagData.toMap());
     }
 }
