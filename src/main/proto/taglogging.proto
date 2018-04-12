@@ -34,6 +34,7 @@ message TagReport {
     double rssi = 4;
     int64 time = 5;
     double phase = 6;
+    double dopplerFrequency = 7;
 }
 
 message ServerListResponse {

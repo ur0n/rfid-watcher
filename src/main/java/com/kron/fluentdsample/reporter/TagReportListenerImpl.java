@@ -29,9 +29,11 @@ public class TagReportListenerImpl extends Reporter<TagData> implements TagRepor
             int port = tag.getAntennaPortNumber();
             String id = String.join("", tag.getEpc().toString().split(" "));
             double rssi = tag.getPeakRssiInDbm();
-            long time = Long.valueOf(tag.getLastSeenTime().ToString());
+//            long time = Long.valueOf(tag.getLastSeenTime().ToString());
+            long time = System.currentTimeMillis();
             double phase = tag.getPhaseAngleInRadians();
-            tagData = new TagData(impinjReader.getAddress(), port, id, rssi, time, phase);
+            double dopplerFrequency = tag.getRfDopplerFrequency();
+            tagData = new TagData(impinjReader.getAddress(), port, id, rssi, time, phase, dopplerFrequency);
             notifyObservers();
         });
     }

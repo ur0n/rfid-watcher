@@ -13,14 +13,7 @@ public class TagData {
     private double rssi;
     private long time;
     private double phase;
-
-    public TagData(int port, String id, double rssi, long time, double phase) {
-        this.port = port;
-        this.id = id;
-        this.rssi = rssi;
-        this.time = time;
-        this.phase = phase;
-    }
+    private double dopplerFrequency;
 
     public TagData(String ip, int port, String id, double rssi, long time, double phase) {
         this.ip = ip;
@@ -29,6 +22,17 @@ public class TagData {
         this.rssi = rssi;
         this.time = time;
         this.phase = phase;
+        this.dopplerFrequency = 0.0;
+    }
+
+    public TagData(String ip, int port, String id, double rssi, long time, double phase, double dopplerFrequency) {
+        this.ip = ip;
+        this.port = port;
+        this.id = id;
+        this.rssi = rssi;
+        this.time = time;
+        this.phase = phase;
+        this.dopplerFrequency = dopplerFrequency;
     }
 
     public String getIp() {
@@ -64,6 +68,7 @@ public class TagData {
                 .setRssi(rssi)
                 .setTime(time)
                 .setPhase(phase)
+                .setDopplerFrequency(dopplerFrequency)
                 .build();
     }
 
@@ -75,6 +80,7 @@ public class TagData {
         data.put("rssi", this.rssi);
         data.put("time", this.time);
         data.put("phase", this.phase);
+        data.put("dopplerFrequency", this.dopplerFrequency);
         return data;
     }
 
@@ -87,10 +93,9 @@ public class TagData {
         data.put("rssi", String.valueOf(this.rssi));
         data.put("time", String.valueOf(this.time));
         data.put("phase", String.valueOf(this.phase));
+        data.put("dopplerFrequency", String.valueOf(this.dopplerFrequency));
         return data;
     }
-
-
 
     @Override
     public String toString() {
@@ -101,6 +106,7 @@ public class TagData {
                 ", rssi=" + rssi +
                 ", time=" + time +
                 ", phase=" + phase +
+                ", dopplerFrequency=" + dopplerFrequency +
                 '}';
     }
 }
