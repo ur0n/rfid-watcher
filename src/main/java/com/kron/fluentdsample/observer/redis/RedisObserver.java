@@ -44,19 +44,18 @@ public class RedisObserver implements Observer<TagData> {
         @Override
         public void run() {
             SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+            Random rand = new Random();
 
             synchronized (buffer) {
                 buffer.forEach(data -> {
                     String timeTag = format.format(new Date());
-                    String tag = "tag.report" + timeTag + String.join("", data.getId().split(".")) + data.getPort();
+                    String tag = "tag.report" + timeTag + "." + data.getIp() + "." + data.getPort() + "." + data.getId() + "."  + rand.nextInt(100);
                     client.hmset(tag, data.toHash());
                 });
-            }
 
-            System.out.println("Flush!");
-            System.out.println("Result: " + buffer.size());
+                System.out.println("Flush!");
+                System.out.println("Result: " + buffer.size());
 
-            synchronized (buffer) {
                 buffer.clear();
             }
         }
