@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAntennaHealthCheckCallback, IAntennaHealthChangeCallback, ICallback {
     private List<String> ips;
-    private Map<String, StreamObserver<TagReport>> responseMap;
     private StreamObserver<TagReport> response;
     private String id;
     private MonitorObserver monitorObserver;
@@ -42,7 +41,6 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
 
     Main() {
         this.ips = new ArrayList<>();
-        this.responseMap = new HashMap<>();
         this.reporterMap = new HashMap<>();
         this.monitorObserverMap = new HashMap<>();
     }
@@ -149,8 +147,6 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
                 });
 
                 RedisObserver redisObserver = new RedisObserver(10000, "redis", 6379);
-//                FluentObserver fluentObserver = new FluentObserver();
-//                tagReportListener.addObserver(fluentObserver);
                 tagReportListener.addObserver(redisObserver);
                 reporterMap.put(ip, tagReportListener);
 
