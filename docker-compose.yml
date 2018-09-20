@@ -3,22 +3,23 @@ services:
   gradle:
     image: aiph.work:5000/mpuarch/gradle
     working_dir: /home/gradle/project
-    command: gradle run -Pargs=file
+    command: gradle run
     ports:
       - "50051:50051"
     links:
       - "redis"
-      - "fluentd"
+    environment:
+      - TZ=Asia/Tokyo
 
   batch:
     image: aiph.work:5000/mpuarch/batch
     volumes:
       - ./batch/files:/home/gradle/project/files
     environment:
-      - PATTERN=tag.*
       - REDIS_HOST=redis # default localhost
       - REDIS_PORT=6379  # default 6379
-      - SCHEDULE=* * * * *
+      - SCHEDULE=15 * * * *
+      - TZ=Asia/Tokyo
     links:
       - "redis"
     command: "gradle run"
@@ -30,15 +31,8 @@ services:
       - ./outputs:/home/gradle/project/outputs
     command: "gradle run"
     environment:
-      - SCHEDULE=*/5 * * * *
-
-  fluentd:
-    image: aiph.work:5000/mpuarch/fluentd
-    ports:
-      - "24224:24224"
-      - "24224:24224/udp"
-    links:
-      - "redis"
+      - SCHEDULE=30 00 * * *
+      - TZ=Asia/Tokyo
 
   redis:
     image: redis
@@ -48,3 +42,7 @@ services:
     volumes:
       - ./redis/redis.conf:/etc/redis/redis.conf
     command: redis-server --appendonly yes
+    environment:
+      - TZ=Asia/Tokyo
+
+
