@@ -12,19 +12,19 @@ import java.util.logging.Logger;
 public class TagLoggingServer {
     private static final Logger logger = Logger.getLogger(TagLoggingServer.class.getName());
     private Server server;
-    private ITagStreamCallback tagStreamCallback;
+    private ITagAllStreamCallback tagAllStreamCallback;
     private ITransPortFilterCallback transPortFilterCallback;
     private IAntennaHealthCheckCallback antennaHealthCheckCallback;
     private List<String> ids;
 
-    public TagLoggingServer(ITagStreamCallback tagStreamCallback, ITransPortFilterCallback transPortFilterCallback, IAntennaHealthCheckCallback antennaHealthCheckCallback) {
-        this.tagStreamCallback = tagStreamCallback;
+    public TagLoggingServer(ITagAllStreamCallback tagAllStreamCallback, ITransPortFilterCallback transPortFilterCallback, IAntennaHealthCheckCallback antennaHealthCheckCallback) {
+        this.tagAllStreamCallback = tagAllStreamCallback;
         this.transPortFilterCallback = transPortFilterCallback;
         this.antennaHealthCheckCallback = antennaHealthCheckCallback;
         this.ids = new ArrayList<>();
     }
 
-    public void addId(String id){
+    public void addId(String id) {
         ids.add(id);
     }
 
@@ -79,17 +79,11 @@ public class TagLoggingServer {
         }
 
         @Override
-        public StreamObserver<ReaderIDRequest> tagStream(StreamObserver<TagReport> responseObserver) {
-            Map<String, ReaderIDRequest> requestMap = new HashMap<>();
-
-            return new StreamObserver<ReaderIDRequest>() {
+        public StreamObserver<GetAllReportRequest> tagAllStream(StreamObserver<TagReport> responseObserver) {
+            return new StreamObserver<GetAllReportRequest>() {
                 @Override
-                public void onNext(ReaderIDRequest request) {
-                    tagStreamCallback.call(request.getId(), responseObserver);
-                    if(requestMap.containsKey(request.getId())){
-                        System.out.println("Already exists request");
-                    }
-                    requestMap.put(request.getId(), request);
+                public void onNext(GetAllReportRequest request) {
+                    tagAllStreamCallback.call(request, responseObserver);
                 }
 
                 @Override

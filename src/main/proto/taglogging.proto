@@ -9,16 +9,16 @@ package taglogging;
 
 service TagLoggingService {
     rpc AntennaHealthCheck (NoParams) returns (stream AntennaChange) {}
-    rpc TagStream (stream ReaderIDRequest) returns (stream TagReport) {}
+    rpc TagAllStream (stream GetAllReportRequest) returns (stream TagReport) {}
     rpc ServerList (NoParams) returns (ServerListResponse) {}
-}
-
-message ReaderIDRequest {
-    string id = 1;
 }
 
 message NoParams {
 
+}
+
+message GetAllReportRequest {
+    int32 status = 1;
 }
 
 message AntennaChange {
