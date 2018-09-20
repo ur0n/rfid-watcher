@@ -44,5 +44,3 @@ services:
     command: redis-server --appendonly yes
     environment:
       - TZ=Asia/Tokyo
-
-
