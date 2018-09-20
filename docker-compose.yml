@@ -19,6 +19,7 @@ services:
       - REDIS_HOST=redis # default localhost
       - REDIS_PORT=6379  # default 6379
       - SCHEDULE=15 * * * *
+      - TZ=Asia/Tokyo
     links:
       - "redis"
     command: "gradle run"

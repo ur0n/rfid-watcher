@@ -2,6 +2,8 @@ package com.kron.fluentdsample.reporter;
 
 import com.impinj.octane.*;
 
+import java.util.ArrayList;
+
 public class RFIDReader {
     private ImpinjReader reader;
     private String ip;
@@ -19,9 +21,14 @@ public class RFIDReader {
         reader.connect(ip);
     }
 
-    public void setting() {
-        settingReport();
-        settingAntenna();
+//    public void setting() {
+//        settingReport();
+//        settingAntenna();
+//    }
+
+    public void setting(ArrayList<Double> freqList) {
+        this.settingReport(freqList);
+        this.settingAntenna();
     }
 
     public void setTagReportListener(TagReportListener tagReportListener) {
@@ -39,7 +46,24 @@ public class RFIDReader {
     }
 
 
-    private void settingReport() {
+//    private void settingReport() {
+//        settings = reader.queryDefaultSettings();
+//        settings.getReport().setIncludeAntennaPortNumber(true);
+//        settings.getReport().setMode(ReportMode.Individual);
+//        settings.getReport().setIncludePeakRssi(true);
+//        settings.getReport().setIncludeLastSeenTime(true);
+//        settings.getReport().setIncludePhaseAngle(true);
+//        settings.getReport().setIncludeDopplerFrequency(true);
+//
+//
+//        try {
+//            reader.applySettings(settings);
+//        } catch (OctaneSdkException e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+    private void settingReport(ArrayList<Double> freqList) {
         settings = reader.queryDefaultSettings();
         settings.getReport().setIncludeAntennaPortNumber(true);
         settings.getReport().setMode(ReportMode.Individual);
@@ -48,12 +72,17 @@ public class RFIDReader {
         settings.getReport().setIncludePhaseAngle(true);
         settings.getReport().setIncludeDopplerFrequency(true);
 
+        // add abe
+        settings.setTxFrequenciesInMhz(freqList);
+
         try {
             reader.applySettings(settings);
         } catch (OctaneSdkException e) {
             e.printStackTrace();
         }
     }
+
+
 
     public AntennaConfigGroup getAcg() {
         return acg;
@@ -63,4 +92,6 @@ public class RFIDReader {
         // Start the reader
         reader.start();
     }
+
+    public Settings getSettings(){ return settings; }
 }

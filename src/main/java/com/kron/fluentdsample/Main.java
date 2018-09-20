@@ -23,14 +23,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAntennaHealthCheckCallback, IAntennaHealthChangeCallback, ICallback {
-    private List<String> ips;
+    //private List<String> ips;
+    private Map<String, ArrayList<Double>> ipAndTxFreq;
     private StreamObserver<TagReport> response;
     private String id;
     private MonitorObserver monitorObserver;
@@ -40,7 +38,8 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
     private StreamObserver<AntennaChange> antennaChangeStreamObserver;
 
     Main() {
-        this.ips = new ArrayList<>();
+        //this.ips = new ArrayList<>();
+        this.ipAndTxFreq = new HashMap<>();
         this.reporterMap = new HashMap<>();
         this.monitorObserverMap = new HashMap<>();
     }
@@ -107,23 +106,26 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
         }
     }
 
-    private void readYAML() {
-        String root = System.getProperty("user.dir");
-        final Yaml y = new Yaml();
-
-        try (final InputStream is = Files.newInputStream(Paths.get(root + "/config/readers.yml"))) {
-            ips = y.loadAs(is, List.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    private void readYAML() {
+//        String root = System.getProperty("user.dir");
+//        final Yaml y = new Yaml();
+//
+//        try (final InputStream is = Files.newInputStream(Paths.get(root + "/config/readers.yml"))) {
+//            ips = y.loadAs(is, List.class);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     public void execute() {
-        readYAML();
+        //readYAML();
+       ipAndTxFreq.put("192.168.0.102", new ArrayList<>(Collections.singletonList(916.8)));
+       ipAndTxFreq.put("192.168.0.103", new ArrayList<>(Collections.singletonList(918.0)));
+        ipAndTxFreq.put("192.168.0.104", new ArrayList<>(Collections.singletonList(920.4)));
 
         TagLoggingServer server = new TagLoggingServer(this::call, this::call, this::call);
 
-        ips.parallelStream().forEach(ip -> {
+        ipAndTxFreq.entrySet().parallelStream().forEach(entry -> {
             try {
                 // antenna change reporter;
                 AntennaChangeListenerImpl antennaChangeListener = new AntennaChangeListenerImpl();
@@ -131,12 +133,15 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
                 TagReportListenerImpl tagReportListener = new TagReportListenerImpl();
 
                 // setting reader
-                RFIDReader reader = new RFIDReader(ip);
+                RFIDReader reader = new RFIDReader(entry.getKey());
                 reader.connect();
-                reader.setting();
+                reader.setting(entry.getValue());
+                System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+                reader.getSettings().getTxFrequenciesInMhz().forEach(System.out::println);
+                System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
                 List<AntennaConfig> antennaConfigs = reader.getAcg().getAntennaConfigs();
-                List<String> ids = antennaConfigs.stream().map(config -> ip + ":" + config.getPortNumber()).collect(Collectors.toList());
+                List<String> ids = antennaConfigs.stream().map(config -> entry.getKey() + ":" + config.getPortNumber()).collect(Collectors.toList());
 
                 // set observers for observe tag data
                 ids.forEach(id -> {
@@ -146,9 +151,9 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
                     tagReportListener.addObserver(monitorObserver);
                 });
 
-                RedisObserver redisObserver = new RedisObserver(10000, "redis", 6379);
+                RedisObserver redisObserver = new RedisObserver(1000, "redis", 6379);
                 tagReportListener.addObserver(redisObserver);
-                reporterMap.put(ip, tagReportListener);
+                reporterMap.put(entry.getKey(), tagReportListener);
 
                 //set observers for observe antenna change
                 AntennaHealthObserver antennaHealthObserver = new AntennaHealthObserver(this::call);
@@ -162,6 +167,46 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
                 e.printStackTrace();
             }
         });
+
+//        ips.parallelStream().forEach(ip -> {
+//            try {
+//                // antenna change reporter;
+//                AntennaChangeListenerImpl antennaChangeListener = new AntennaChangeListenerImpl();
+//                // tag data reporter;
+//                TagReportListenerImpl tagReportListener = new TagReportListenerImpl();
+//
+//                // setting reader
+//                RFIDReader reader = new RFIDReader(ip);
+//                reader.connect();
+//                reader.setting();
+//
+//                List<AntennaConfig> antennaConfigs = reader.getAcg().getAntennaConfigs();
+//                List<String> ids = antennaConfigs.stream().map(config -> ip + ":" + config.getPortNumber()).collect(Collectors.toList());
+//
+//                // set observers for observe tag data
+//                ids.forEach(id -> {
+//                    server.addId(id);
+//                    MonitorObserver monitorObserver = new MonitorObserver();
+//                    monitorObserverMap.put(id, monitorObserver);
+//                    tagReportListener.addObserver(monitorObserver);
+//                });
+//
+//                RedisObserver redisObserver = new RedisObserver(10000, "redis", 6379);
+//                tagReportListener.addObserver(redisObserver);
+//                reporterMap.put(ip, tagReportListener);
+//
+//                //set observers for observe antenna change
+//                AntennaHealthObserver antennaHealthObserver = new AntennaHealthObserver(this::call);
+//                antennaChangeListener.addObserver(antennaHealthObserver);
+//
+//                reader.setTagReportListener(tagReportListener);
+//                reader.setAntennaChangeListener(antennaChangeListener);
+//                reader.start();
+//
+//            } catch (OctaneSdkException e) {
+//                e.printStackTrace();
+//            }
+//        });
 
         GrpcServerRunner runner = new GrpcServerRunner(server);
         runner.start();
