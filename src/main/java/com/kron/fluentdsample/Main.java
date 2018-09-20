@@ -13,6 +13,7 @@ import com.kron.fluentdsample.reporter.Reporter;
 import com.kron.fluentdsample.reporter.TagReportListenerImpl;
 import com.kron.fluentdsample.server.*;
 import com.kron.fluentsample.AntennaChange;
+import com.kron.fluentsample.GetAllReportRequest;
 import com.kron.fluentsample.NoParams;
 import com.kron.fluentsample.TagReport;
 import io.grpc.Attributes;
@@ -26,46 +27,24 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAntennaHealthCheckCallback, IAntennaHealthChangeCallback, ICallback {
-    //private List<String> ips;
+public class Main implements ITagAllStreamCallback, ITransPortFilterCallback, IAntennaHealthCheckCallback, IAntennaHealthChangeCallback, ICallback {
     private Map<String, ArrayList<Double>> ipAndTxFreq;
     private StreamObserver<TagReport> response;
     private String id;
     private MonitorObserver monitorObserver;
 
     private Map<String, Reporter<TagData>> reporterMap;
-    private Map<String, MonitorObserver> monitorObserverMap;
+    private StreamObserver<TagReport> tagReportStreamObserver;
     private StreamObserver<AntennaChange> antennaChangeStreamObserver;
 
     Main() {
-        //this.ips = new ArrayList<>();
         this.ipAndTxFreq = new HashMap<>();
         this.reporterMap = new HashMap<>();
-        this.monitorObserverMap = new HashMap<>();
     }
 
-    /*
-        id: 192.168.0.102:1
-        ip:portのようになっている
-    */
-    // TODO 他のidがきたら前回のオブサーバーをリセットする
     @Override
-    public void call(String id, StreamObserver<TagReport> response) {
-        String ip = id.split(":")[0];
-        MonitorObserver observer = monitorObserverMap.get(id);
-
-        // 前回のオブサーバーをリセットする
-        if (this.id != null && !id.equals(this.id)) {
-            String prevIp = this.id.split(":")[0];
-            monitorObserver.resetCallback();
-            reporterMap.get(prevIp).updateObserver(monitorObserver);
-        }
-
-        this.id = id;
-        this.response = response;
-        observer.setCallback(this::call);
-        reporterMap.get(ip).updateObserver(observer);
-        monitorObserver = observer;
+    public void call(GetAllReportRequest getAllReportRequest, StreamObserver<TagReport> response) {
+        tagReportStreamObserver = response;
     }
 
     @Override
@@ -77,16 +56,10 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
     // MonitorObserver.resetCallback()を呼ぶと何もしないコールバックがセットされる
     @Override
     public void call(Attributes attributes) {
-        // keySet() == Set[ip];
         reporterMap.keySet().forEach(ip -> {
             Reporter<TagData> r = reporterMap.get(ip);
-            monitorObserverMap.keySet().stream().filter(id -> {
-                String ip2 = id.split(":")[0];
-                return ip.equals(ip2);
-            }).map(id -> monitorObserverMap.get(id)).map(observer -> {
-                observer.resetCallback();
-                return observer;
-            }).forEach(r::updateObserver);
+            monitorObserver.resetCallback();
+            r.updateObserver(monitorObserver);
         });
     }
 
@@ -117,14 +90,17 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
 //        }
 //    }
 
+    // メインの処理
     public void execute() {
         //readYAML();
-       ipAndTxFreq.put("192.168.0.102", new ArrayList<>(Collections.singletonList(916.8)));
-       ipAndTxFreq.put("192.168.0.103", new ArrayList<>(Collections.singletonList(918.0)));
+        ipAndTxFreq.put("192.168.0.102", new ArrayList<>(Collections.singletonList(916.8)));
+        ipAndTxFreq.put("192.168.0.103", new ArrayList<>(Collections.singletonList(918.0)));
         ipAndTxFreq.put("192.168.0.104", new ArrayList<>(Collections.singletonList(920.4)));
 
+        // grpcのサーバーを立てる
         TagLoggingServer server = new TagLoggingServer(this::call, this::call, this::call);
 
+        // それぞれのアンテナに対して並列に処理をする
         ipAndTxFreq.entrySet().parallelStream().forEach(entry -> {
             try {
                 // antenna change reporter;
@@ -136,20 +112,16 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
                 RFIDReader reader = new RFIDReader(entry.getKey());
                 reader.connect();
                 reader.setting(entry.getValue());
-                System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-                reader.getSettings().getTxFrequenciesInMhz().forEach(System.out::println);
-                System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
+                // アンテナの設定から設定せれてるアンテナのポートナンバーを取得
                 List<AntennaConfig> antennaConfigs = reader.getAcg().getAntennaConfigs();
                 List<String> ids = antennaConfigs.stream().map(config -> entry.getKey() + ":" + config.getPortNumber()).collect(Collectors.toList());
 
                 // set observers for observe tag data
-                ids.forEach(id -> {
-                    server.addId(id);
-                    MonitorObserver monitorObserver = new MonitorObserver();
-                    monitorObserverMap.put(id, monitorObserver);
-                    tagReportListener.addObserver(monitorObserver);
-                });
+                ids.forEach(server::addId);
+
+                MonitorObserver monitorObserver = new MonitorObserver();
+                tagReportListener.addObserver(monitorObserver);
 
                 RedisObserver redisObserver = new RedisObserver(1000, "redis", 6379);
                 tagReportListener.addObserver(redisObserver);
@@ -168,45 +140,6 @@ public class Main implements ITagStreamCallback, ITransPortFilterCallback, IAnte
             }
         });
 
-//        ips.parallelStream().forEach(ip -> {
-//            try {
-//                // antenna change reporter;
-//                AntennaChangeListenerImpl antennaChangeListener = new AntennaChangeListenerImpl();
-//                // tag data reporter;
-//                TagReportListenerImpl tagReportListener = new TagReportListenerImpl();
-//
-//                // setting reader
-//                RFIDReader reader = new RFIDReader(ip);
-//                reader.connect();
-//                reader.setting();
-//
-//                List<AntennaConfig> antennaConfigs = reader.getAcg().getAntennaConfigs();
-//                List<String> ids = antennaConfigs.stream().map(config -> ip + ":" + config.getPortNumber()).collect(Collectors.toList());
-//
-//                // set observers for observe tag data
-//                ids.forEach(id -> {
-//                    server.addId(id);
-//                    MonitorObserver monitorObserver = new MonitorObserver();
-//                    monitorObserverMap.put(id, monitorObserver);
-//                    tagReportListener.addObserver(monitorObserver);
-//                });
-//
-//                RedisObserver redisObserver = new RedisObserver(10000, "redis", 6379);
-//                tagReportListener.addObserver(redisObserver);
-//                reporterMap.put(ip, tagReportListener);
-//
-//                //set observers for observe antenna change
-//                AntennaHealthObserver antennaHealthObserver = new AntennaHealthObserver(this::call);
-//                antennaChangeListener.addObserver(antennaHealthObserver);
-//
-//                reader.setTagReportListener(tagReportListener);
-//                reader.setAntennaChangeListener(antennaChangeListener);
-//                reader.start();
-//
-//            } catch (OctaneSdkException e) {
-//                e.printStackTrace();
-//            }
-//        });
 
         GrpcServerRunner runner = new GrpcServerRunner(server);
         runner.start();

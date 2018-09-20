@@ -2,12 +2,12 @@ package com.kron.fluentdsample;
 
 import com.kron.fluentdsample.entity.AntennaHealth;
 import com.kron.fluentdsample.entity.TagData;
-import com.kron.fluentdsample.observer.fluentd.FluentObserver;
 import com.kron.fluentdsample.observer.monitor.*;
 import com.kron.fluentdsample.reporter.Reporter;
 import com.kron.fluentdsample.reporter.TagDataReporterFromFile;
 import com.kron.fluentdsample.server.*;
 import com.kron.fluentsample.AntennaChange;
+import com.kron.fluentsample.GetAllReportRequest;
 import com.kron.fluentsample.NoParams;
 import com.kron.fluentsample.TagReport;
 import io.grpc.Attributes;
@@ -19,7 +19,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class TagReportingServer implements ITagStreamCallback, IAntennaHealthCheckCallback, ITransPortFilterCallback, ICallback {
+public class TagReportingServer implements ITagAllStreamCallback, IAntennaHealthCheckCallback, ITransPortFilterCallback, ICallback {
 
     private StreamObserver<TagReport> response;
     private Reporter reporter;
@@ -31,11 +31,7 @@ public class TagReportingServer implements ITagStreamCallback, IAntennaHealthChe
     }
 
     @Override
-    public void call(String id, StreamObserver<TagReport> response) {
-        System.out.println("============== TagReport ===============");
-        System.out.println(id);
-        System.out.println("=============================");
-
+    public void call(GetAllReportRequest getAllReportRequest, StreamObserver<TagReport> response) {
         this.response = response;
         monitorObserver.setCallback(this::call);
         reporter.updateObserver(monitorObserver);
@@ -105,7 +101,6 @@ public class TagReportingServer implements ITagStreamCallback, IAntennaHealthChe
         reporter = new TagDataReporterFromFile();
         monitorObserver = new MonitorObserver();
 
-        reporter.addObserver(new FluentObserver());
         reporter.addObserver(monitorObserver);
         reporter.execute();
     }

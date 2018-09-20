@@ -1,6 +1,5 @@
 package com.kron.fluentdsample.server;
 
-import com.kron.fluentdsample.server.ITransPortFilterCallback;
 import io.grpc.Attributes;
 import io.grpc.ServerTransportFilter;
 
