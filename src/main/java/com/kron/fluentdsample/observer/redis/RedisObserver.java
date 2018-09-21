@@ -53,8 +53,8 @@ public class RedisObserver implements Observer<TagData> {
                     client.hmset(tag, data.toHash());
                 });
 
-                System.out.println("Flush!");
-                System.out.println("Result: " + buffer.size());
+//                System.out.println("Flush!");
+//                System.out.println("Result: " + buffer.size());
 
                 buffer.clear();
             }
