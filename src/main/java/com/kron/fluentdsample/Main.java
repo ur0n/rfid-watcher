@@ -44,6 +44,12 @@ public class Main implements ITagAllStreamCallback, ITransPortFilterCallback, IA
 
     @Override
     public void call(GetAllReportRequest getAllReportRequest, StreamObserver<TagReport> response) {
+        System.out.println("call kiteruyo");
+        reporterMap.keySet().forEach(ip -> {
+            Reporter<TagData> r = reporterMap.get(ip);
+            monitorObserver.setCallback(this::call);
+            r.updateObserver(monitorObserver);
+        });
         tagReportStreamObserver = response;
     }
 
@@ -66,10 +72,8 @@ public class Main implements ITagAllStreamCallback, ITransPortFilterCallback, IA
     // TODO readerを分ける
     @Override
     public void call(TagData tagData) {
-        String id = tagData.getIp() + ":" + tagData.getPort();
-        if (response != null && this.id.equals(id)) {
-            response.onNext(tagData.toTagReport());
-        }
+        if (tagReportStreamObserver == null) return;
+        tagReportStreamObserver.onNext(tagData.toTagReport());
     }
 
     @Override
@@ -120,7 +124,7 @@ public class Main implements ITagAllStreamCallback, ITransPortFilterCallback, IA
                 // set observers for observe tag data
                 ids.forEach(server::addId);
 
-                MonitorObserver monitorObserver = new MonitorObserver();
+                monitorObserver = new MonitorObserver();
                 tagReportListener.addObserver(monitorObserver);
 
                 RedisObserver redisObserver = new RedisObserver(1000, "redis", 6379);
